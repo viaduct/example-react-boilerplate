@@ -1,0 +1,1 @@
+export {serverHookFac} from "src/hookinits/serverHookFac";

@@ -1,17 +1,55 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import React from "react";
+import ReactDom from "react-dom";
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+import {App} from "src/dumbs";
+import {useAppLogic} from "src/logics";
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+import {
+    stateful,
+
+    initContext,
+    initHooks,
+    initReactContext,
+    contextFromHookFac,
+} from "src/utils";
+import {
+    initLocalAuthData, 
+    initServerConnection,
+} from "src/ctxinits";
+import {
+    serverHookFac,
+} from "src/hookinits";
+import * as ReactContexts from "src/reactctxts";
+
+async function main()
+{
+    // Init context.
+    const effectfulContext = await initContext([
+        initLocalAuthData,
+        initServerConnection,
+    ]);
+
+    // Create global hooks.
+    const hookFacs = [
+        {...serverHookFac, reactContext: ReactContexts.Server},
+    ];
+    const hooks = await initHooks(effectfulContext, hookFacs);
+    
+    // Wrap global hooks as contexts, so that they are accessable by React context.
+    const reactContextful = initReactContext(
+        hookFacs.map(contextFromHookFac),
+        hooks,
+    );
+
+    ReactDom.render(
+        React.createElement(
+            reactContextful(
+                stateful(App, useAppLogic)
+            )
+        ),
+        document.getElementById("root"),
+    );
+}
+main();
+
+
